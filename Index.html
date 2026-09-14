@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strive 3D Engine - Complete Combined App</title>
+
+  <!-- Three.js 3D Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #161e2e;
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --gold-color: #f59e0b;
+      --health-color: #ef4444;
+      --boss-color: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #243147;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1.5rem;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .logo span {
+      color: var(--accent-color);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+      background-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .audio-btn {
+      background: var(--border-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .audio-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    #app-container {
+      position: relative;
+      flex: 1;
+      height: calc(100vh - 60px);
+    }
+
+    .screen {
+      display: none;
+      height: 100%;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* Home Banner & Download Button */
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(22, 30, 46, 0.9), rgba(56, 189, 248, 0.15));
+      border: 1px solid var(--border-color);
+      padding: 2rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .welcome-banner h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .welcome-banner p {
+      color: var(--text-muted);
+    }
+
+    .btn-download {
+      background-color: var(--gold-color);
+      color: #000;
+      font-size: 1rem;
+      font-weight: bold;
+      padding: 0.8rem 1.6rem;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+    }
+
+    .card h3 {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .dashboard-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .flex-1 { flex: 1; }
+    .flex-2 { flex: 2; }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-primary { background-color: var(--accent-color); color: #000; }
+    .btn-primary:hover { background-color: var(--accent-hover); color: #fff; }
+    .btn-secondary { background-color: var(--border-color); color: var(--text-main); }
+    .btn-danger { background-color: var(--health-color); color: #fff; }
+
+    .activity-log {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    .activity-log li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* 3D Canvas Screen */
+    #3d-screen {
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #webgl-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .game-hud-overlay {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(22, 30, 46, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .combo-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      background: var(--gold-color);
+      color: #000;
+      font-weight: bold;
+      border-radius: 10px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .boss-hp-bar-container {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      background: rgba(22, 30, 46, 0.9);
+      padding: 8px 15px;
+      border-radius: 20px;
+      border: 1px solid var(--boss-color);
+      display: none;
+      text-align: center;
+    }
+
+    .boss-hp-bar {
+      height: 10px;
+      background: var(--boss-color);
+      border-radius: 5px;
+      width: 100%;
+      transition: width 0.2s ease;
+    }
+
+    .controls-tooltip {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(22, 30, 46, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .controls-tooltip b {
+      color: var(--accent-color);
+    }
+
+    #interact-prompt {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--gold-color);
+      color: #000;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+      display: none;
+      pointer-events: none;
+    }
+
+    /* Floating Damage Numbers */
+    .damage-popup {
+      position: absolute;
+      color: #ff4757;
+      font-weight: 900;
+      font-size: 18px;
+      pointer-events: none;
+      user-select: none;
+      animation: popupFloat 0.8s ease-out forwards;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    @keyframes popupFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.3); }
+      100% { opacity: 0; transform: translateY(-50px) scale(0.8); }
+    }
+
+    /* Shop Modal */
+    .shop-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 500px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 100;
+    }
+
+    .shop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .shop-title { font-size: 1.2rem; color: var(--accent-color); }
+    .close-shop-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+
+    .shop-speech {
+      background: var(--bg-color);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-style: italic;
+      color: var(--text-muted);
+    }
+
+    .item-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .item-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-color); border-radius: 8px; }
+    .item-price { color: var(--gold-color); font-weight: bold; }
+
+    .bargain-controls { margin-top: 1rem; display: flex; gap: 0.5rem; }
+    .bargain-input { flex: 1; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); }
+
+    /* Inventory Screen */
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .inventory-slot {
+      background: var(--bg-color);
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius);
+      height: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .inventory-slot.filled { border: 2px solid var(--accent-color); background: var(--card-bg); }
+    .inventory-slot.filled:hover { border-color: var(--gold-color); transform: translateY(-2px); }
+
+    .slot-icon { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    .slot-name { font-size: 0.75rem; color: var(--text-main); text-align: center; }
+    .slot-count { position: absolute; top: 5px; right: 8px; font-size: 0.75rem; font-weight: bold; color: var(--gold-color); }
+
+    /* Skills Grid */
+    .skill-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .setting-group { margin-bottom: 1.5rem; }
+    .setting-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); }
+    .volume-slider { width: 100%; max-width: 300px; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <header class="navbar">
+    <div class="logo">Strive<span>3D Suite</span></div>
+    <div class="nav-right">
+      <nav>
+        <button class="nav-btn active" onclick="AppEngine.navigateTo('home-screen')">Home</button>
+        <button class="nav-btn" onclick="AppEngine.navigateTo('3d-screen')">3D Arena</button>
+        <button class="nav-btn" onclick="AppEngine.navigateTo('inventory-screen')">Inventory</button>
+        <button class="nav-btn" onclick="AppEngine.navigateTo('skills-screen')">Skill Tree</button>
+        <button class="nav-btn" onclick="AppEngine.navigateTo('settings-screen')">Settings</button>
+      </nav>
+
+      <button class="audio-btn" id="nav-audio-btn" onclick="AppAudio.toggleMute()">
+        <span id="audio-icon">🔊</span> Audio: <span id="audio-status">ON</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="app-container">
+
+    <!-- HOME SCREEN -->
+    <section id="home-screen" class="screen active">
+      <div class="welcome-banner">
+        <div>
+          <h1>Strive 3D Master Application</h1>
+          <p>Complete combined engine featuring 3D graphics, combat, AI enemies, boss fights, audio FX, shop system, and local auto-saving.</p>
+        </div>
+        <button class="btn-download" onclick="AppEngine.downloadSourceCode()">
+          ⬇️ Download Source Code
+        </button>
+      </div>
+
+      <div class="grid-container" id="metrics-grid"></div>
+
+      <div class="dashboard-row">
+        <div class="card flex-1">
+          <h3>Quick Controls & Save Engine</h3>
+          <div class="action-buttons">
+            <button class="btn btn-primary" onclick="AppEngine.triggerAction('quick-add')">+100 Gold</button>
+            <button class="btn btn-secondary" onclick="AppEngine.triggerAction('spawn-enemy')">Spawn Drone</button>
+            <button class="btn btn-secondary" style="border-color: var(--boss-color);" onclick="AppEngine.triggerAction('spawn-boss')">Spawn Boss</button>
+            <button class="btn btn-secondary" onclick="AppEngine.saveProgress()">Save Progress</button>
+            <button class="btn btn-danger" onclick="AppEngine.resetProgress()">Reset Save Data</button>
+          </div>
+        </div>
+
+        <div class="card flex-2">
+          <h3>System Event Logs</h3>
+          <ul class="activity-log" id="activity-log-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3D ARENA SCREEN -->
+    <section id="3d-screen" class="screen">
+      <div class="game-hud-overlay">
+        <div><b>Level:</b> <span id="hud-level" style="color: var(--accent-color);">1</span> (<span id="hud-xp">0</span>/100 XP) <span id="combo-badge" class="combo-badge">1x COMBO</span></div>
+        <div><b>Gold:</b> <span id="hud-gold" style="color: var(--gold-color);">5000</span> | <b>HP:</b> <span id="hud-hp" style="color: var(--health-color);">100/100</span></div>
+        <div><b>Kills:</b> <span id="kills-display" style="color: var(--accent-color);">0</span> | <b>Zone:</b> Arena Citadel</div>
+      </div>
+
+      <div class="boss-hp-bar-container" id="boss-hud">
+        <div style="font-size: 12px; font-weight: bold; color: var(--boss-color); margin-bottom: 4px;">CYBER DREADNOUGHT BOSS</div>
+        <div class="boss-hp-bar" id="boss-hp-fill"></div>
+      </div>
+
+      <div id="interact-prompt">Press [E] to Talk to Shopkeeper</div>
+
+      <div class="controls-tooltip">
+        Move: <b>W, A, S, D</b> | Jump: <b>SPACE</b> | Attack: <b>F / Click</b> | Shockwave: <b>R</b> | Talk: <b>E</b>
+      </div>
+
+      <canvas id="webgl-canvas"></canvas>
+
+      <!-- SHOP MODAL -->
+      <div class="shop-modal" id="shop-modal">
+        <div class="shop-header">
+          <h2 class="shop-title">Shopkeeper Goran</h2>
+          <button class="close-shop-btn" onclick="AppEngine.closeShop()">✕</button>
+        </div>
+
+        <div class="shop-speech" id="npc-dialogue">
+          "Welcome! Browse my gear or offer a fair price to trade."
+        </div>
+
+        <div class="item-list">
+          <div class="item-row">
+            <div>
+              <div><b>Crystal Greatsword</b></div>
+              <div style="font-size: 12px; color: var(--text-muted);">+40 Attack Damage</div>
+            </div>
+            <div>
+              <span class="item-price">500 Gold</span>
+              <button class="btn btn-primary" style="padding: 4px 10px; margin-left: 8px;" onclick="AppEngine.buyItem('Crystal Greatsword', 500, '⚔️', 'weapon', 0, 40)">Buy</button>
+            </div>
+          </div>
+          <div class="item-row">
+            <div>
+              <div><b>Health Elixir</b></div>
+              <div style="font-size: 12px; color: var(--text-muted);">Restores +35 HP</div>
+            </div>
+            <div>
+              <span class="item-price">100 Gold</span>
+              <button class="btn btn-primary" style="padding: 4px 10px; margin-left: 8px;" onclick="AppEngine.buyItem('Health Elixir', 100, '🧪', 'consumable', 35, 0)">Buy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bargain-controls">
+          <input type="number" id="offer-input" class="bargain-input" placeholder="Offer counter gold price...">
+          <button class="btn btn-secondary" onclick="AppEngine.makeOffer()">Bargain</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVENTORY SCREEN -->
+    <section id="inventory-screen" class="screen">
+      <div style="padding: 0.5rem 0;">
+        <h2>Player Inventory</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Click items to use or inspect them.</p>
+
+        <div class="card" style="max-width: 650px;">
+          <h3>Backpack (8 Slots)</h3>
+          <div class="inventory-grid" id="inventory-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS SCREEN -->
+    <section id="skills-screen" class="screen">
+      <div style="padding: 0.5rem 0;">
+        <h2>Skill & Ability Upgrades</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Upgrade abilities with collected gold.</p>
+
+        <div style="max-width: 600px;">
+          <div class="skill-card">
+            <div>
+              <b>Shockwave Radial Slash [R Key]</b>
+              <div style="font-size: 12px; color: var(--text-muted);">360-degree radial area attack.</div>
+            </div>
+            <button class="btn btn-primary" id="unlock-skill-btn" onclick="AppEngine.unlockSkill()">Unlock (300 Gold)</button>
+          </div>
+
+          <div class="skill-card">
+            <div>
+              <b>Max Health Boost (+25 HP)</b>
+              <div style="font-size: 12px; color: var(--text-muted);">Increases maximum player health.</div>
+            </div>
+            <button class="btn btn-secondary" onclick="AppEngine.upgradeHp()">Upgrade (200 Gold)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS SCREEN -->
+    <section id="settings-screen" class="screen">
+      <div style="padding: 0.5rem 0;">
+        <h2>Audio & System Settings</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Adjust Web Audio Synthesizer parameters.</p>
+
+        <div class="card" style="max-width: 500px;">
+          <h3>Volume Controls</h3>
+          
+          <div class="setting-group" style="margin-top: 1rem;">
+            <label for="vol-range">Master Audio Volume</label>
+            <input type="range" id="vol-range" class="volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="AppAudio.setVolume(this.value)">
+          </div>
+
+          <div class="setting-group">
+            <button class="btn btn-secondary" onclick="AppAudio.playAttackSound()">Test Attack Sound</button>
+            <button class="btn btn-secondary" onclick="AppAudio.playShockwaveSound()">Test Shockwave Sound</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // AUDIO ENGINE
+    const AppAudio = (function () {
+      let audioCtx = null;
+      let masterGain = null;
+      let isMuted = false;
+      let stepTimer = 0;
+
+      function initContext() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.5;
+          masterGain.connect(audioCtx.destination);
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+      function setVolume(val) {
+        initContext();
+        if (masterGain && !isMuted) {
+          masterGain.gain.value = parseFloat(val);
+        }
+      }
+
+      function toggleMute() {
+        initContext();
+        isMuted = !isMuted;
+        if (masterGain) {
+          masterGain.gain.value = isMuted ? 0 : 0.5;
+        }
+        document.getElementById('audio-icon').innerText = isMuted ? '🔇' : '🔊';
+        document.getElementById('audio-status').innerText = isMuted ? 'OFF' : 'ON';
+      }
+
+      function playTone(freq, duration, type = 'sine') {
+        if (isMuted) return;
+        initContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      }
+
+      function playCoinSound() {
+        if (isMuted) return;
+        initContext();
+        playTone(987.77, 0.08, 'sine');
+        setTimeout(() => playTone(1318.51, 0.15, 'sine'), 80);
+      }
+
+      function playJumpSound() {
+        if (isMuted) return;
+        initContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+
+      function playFootstep() {
+        const now = Date.now();
+        if (now - stepTimer > 320) {
+          playTone(90, 0.04, 'triangle');
+          stepTimer = now;
+        }
+      }
+
+      function playSuccessSound() {
+        if (isMuted) return;
+        initContext();
+        playTone(523.25, 0.1, 'sine');
+        setTimeout(() => playTone(659.25, 0.1, 'sine'), 100);
+        setTimeout(() => playTone(783.99, 0.2, 'sine'), 200);
+      }
+
+      function playRejectSound() {
+        if (isMuted) return;
+        initContext();
+        playTone(180, 0.15, 'sawtooth');
+      }
+
+      function playPickupSound() {
+        if (isMuted) return;
+        initContext();
+        playTone(440, 0.08, 'sine');
+        setTimeout(() => playTone(880, 0.12, 'sine'), 70);
+      }
+
+      function playAttackSound() {
+        if (isMuted) return;
+        initContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.15);
+
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      }
+
+      function playShockwaveSound() {
+        if (isMuted) return;
+        initContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      }
+
+      function playHitSound() {
+        if (isMuted) return;
+        initContext();
+        playTone(110, 0.12, 'square');
+      }
+
+      return {
+        initContext,
+        setVolume,
+        toggleMute,
+        playCoinSound,
+        playJumpSound,
+        playFootstep,
+        playSuccessSound,
+        playRejectSound,
+        playPickupSound,
+        playAttackSound,
+        playShockwaveSound,
+        playHitSound
+      };
+    })();
+
+    // MAIN GAME & ENGINE CONTROLLER
+    const AppEngine = (function () {
+      let state = {
+        activeScreen: 'home-screen',
+        metrics: [
+          { id: 'm1', label: 'Player Gold', value: 5000 },
+          { id: 'm2', label: 'Player HP', value: 100 },
+          { id: 'm3', label: 'Enemies Defeated', value: 0 },
+          { id: 'm4', label: 'Player Level', value: 1 }
+        ],
+        xp: 0,
+        maxHp: 100,
+        hasShockwaveSkill: false,
+        comboHits: 0,
+        comboTimer: null,
+        inventory: [
+          { id: 'item1', name: 'Health Elixir', icon: '🧪', count: 2, type: 'consumable', heal: 35 },
+          { id: 'item2', name: 'Gold Coin', icon: '🪙', count: 5, type: 'gold', value: 100 }
+        ],
+        maxSlots: 8,
+        logs: [
+          'Engine Initialized successfully.',
+          'All systems, 3D Canvas, & Audio context connected.'
+        ]
+      };
+
+      let scene, camera, renderer, playerMesh, npcMesh, attackArcMesh, shockwaveMesh;
+      let pickupItems = [];
+      let enemies = [];
+      let particles = [];
+      let boss = null;
+      let keys = {};
+      let is3DInitialized = false;
+      let nearNPC = false;
+      let lastEnemyAttackTime = 0;
+
+      function getState() { return state; }
+
+      function downloadSourceCode() {
+        const fullHTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "index.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addLog("Downloaded source code file (index.html).");
+      }
+
+      function saveProgress() {
+        try {
+          localStorage.setItem('strive_save_data', JSON.stringify({
+            metrics: state.metrics,
+            xp: state.xp,
+            maxHp: state.maxHp,
+            hasShockwaveSkill: state.hasShockwaveSkill,
+            inventory: state.inventory
+          }));
+          AppAudio.playSuccessSound();
+          addLog("Game progress saved to local browser storage!");
+        } catch(e) {
+          addLog("Could not save to LocalStorage.");
+        }
+      }
+
+      function loadProgress() {
+        try {
+          const data = localStorage.getItem('strive_save_data');
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed.metrics) state.metrics = parsed.metrics;
+            if (parsed.xp !== undefined) state.xp = parsed.xp;
+            if (parsed.maxHp) state.maxHp = parsed.maxHp;
+            if (parsed.hasShockwaveSkill !== undefined) state.hasShockwaveSkill = parsed.hasShockwaveSkill;
+            if (parsed.inventory) state.inventory = parsed.inventory;
+
+            if (state.hasShockwaveSkill) {
+              const btn = document.getElementById('unlock-skill-btn');
+              if (btn) {
+                btn.innerText = 'Unlocked ✓';
+                btn.disabled = true;
+              }
+            }
+            addLog("Loaded saved progress from local storage.");
+          }
+        } catch(e) {}
+      }
+
+      function resetProgress() {
+        localStorage.removeItem('strive_save_data');
+        location.reload();
+      }
+
+      function addLog(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        state.logs.unshift(`[${timestamp}] ${message}`);
+        renderLogs();
+      }
+
+      function updateMetric(id, newValue) {
+        const metric = state.metrics.find(m => m.id === id);
+        if (metric) {
+          metric.value = newValue;
+          renderMetrics();
+        }
+        const hudGold = document.getElementById('hud-gold');
+        if (hudGold && id === 'm1') hudGold.innerText = newValue;
+
+        const hudHp = document.getElementById('hud-hp');
+        if (hudHp && id === 'm2') hudHp.innerText = `${newValue}/${state.maxHp}`;
+
+        const killsDisplay = document.getElementById('kills-display');
+        if (killsDisplay && id === 'm3') killsDisplay.innerText = newValue;
+
+        const hudLvl = document.getElementById('hud-level');
+        if (hudLvl && id === 'm4') hudLvl.innerText = newValue;
+      }
+
+      function registerHitCombo() {
+        state.comboHits += 1;
+        const badge = document.getElementById('combo-badge');
+        if (badge) {
+          badge.innerText = `${state.comboHits}x COMBO`;
+          badge.style.opacity = '1';
+        }
+
+        clearTimeout(state.comboTimer);
+        state.comboTimer = setTimeout(() => {
+          state.comboHits = 0;
+          if (badge) badge.style.opacity = '0';
+        }, 2500);
+      }
+
+      function showDamageText(amount, position3D) {
+        if (!camera || state.activeScreen !== '3d-screen') return;
+
+        const vector = position3D.clone();
+        vector.project(camera);
+
+        const x = (vector.x * .5 + .5) * window.innerWidth;
+        const y = (-(vector.y * .5) + .5) * window.innerHeight;
+
+        const div = document.createElement('div');
+        div.className = 'damage-popup';
+        div.innerText = `-${amount}`;
+        div.style.left = `${x}px`;
+        div.style.top = `${y}px`;
+
+        document.getElementById('3d-screen').appendChild(div);
+
+        setTimeout(() => {
+          if (div.parentNode) div.parentNode.removeChild(div);
+        }, 800);
+      }
+
+      function addXp(amount) {
+        const bonus = state.comboHits > 1 ? Math.floor(amount * (state.comboHits * 0.2)) : 0;
+        state.xp += (amount + bonus);
+
+        if (state.xp >= 100) {
+          state.xp -= 100;
+          const currentLvl = state.metrics.find(m => m.id === 'm4').value;
+          updateMetric('m4', currentLvl + 1);
+          state.maxHp += 15;
+          updateMetric('m2', state.maxHp);
+          AppAudio.playSuccessSound();
+          addLog(`LEVEL UP! You reached Level ${currentLvl + 1}!`);
+        }
+        const xpElem = document.getElementById('hud-xp');
+        if (xpElem) xpElem.innerText = state.xp;
+      }
+
+      function addItemToInventory(name, icon, type = 'misc', heal = 0, value = 0) {
+        const existing = state.inventory.find(item => item.name === name);
+        if (existing) {
+          existing.count += 1;
+        } else if (state.inventory.length < state.maxSlots) {
+          state.inventory.push({
+            id: 'item_' + Date.now(),
+            name,
+            icon,
+            count: 1,
+            type,
+            heal,
+            value
+          });
+        } else {
+          addLog('Inventory is full!');
+          return false;
+        }
+        renderInventory();
+        return true;
+      }
+
+      function useInventoryItem(index) {
+        const item = state.inventory[index];
+        if (!item) return;
+
+        if (item.type === 'consumable' && item.heal) {
+          const currentHp = state.metrics.find(m => m.id === 'm2').value;
+          const newHp = Math.min(state.maxHp, currentHp + item.heal);
+          updateMetric('m2', newHp);
+          AppAudio.playSuccessSound();
+          addLog(`Used ${item.name}. Restored +${item.heal} HP.`);
+        } else if (item.type === 'gold' && item.value) {
+          const currentGold = state.metrics.find(m => m.id === 'm1').value;
+          updateMetric('m1', currentGold + item.value);
+          AppAudio.playCoinSound();
+          addLog(`Redeemed ${item.name} for +${item.value} Gold.`);
+        } else {
+          AppAudio.playSuccessSound();
+          addLog(`Equipped/Inspected ${item.name}.`);
+        }
+
+        item.count -= 1;
+        if (item.count <= 0) {
+          state.inventory.splice(index, 1);
+        }
+        renderInventory();
+      }
+
+      function unlockSkill() {
+        const gold = state.metrics.find(m => m.id === 'm1').value;
+        if (gold >= 300 && !state.hasShockwaveSkill) {
+          updateMetric('m1', gold - 300);
+          state.hasShockwaveSkill = true;
+          AppAudio.playSuccessSound();
+          document.getElementById('unlock-skill-btn').innerText = 'Unlocked ✓';
+          document.getElementById('unlock-skill-btn').disabled = true;
+          addLog('Unlocked Shockwave Radial Skill [R Key].');
+        } else if (state.hasShockwaveSkill) {
+          addLog('Skill already unlocked.');
+        } else {
+          AppAudio.playRejectSound();
+          addLog('Not enough gold to unlock skill.');
+        }
+      }
+
+      function upgradeHp() {
+        const gold = state.metrics.find(m => m.id === 'm1').value;
+        if (gold >= 200) {
+          updateMetric('m1', gold - 200);
+          state.maxHp += 25;
+          updateMetric('m2', state.maxHp);
+          AppAudio.playSuccessSound();
+          addLog('Upgraded Max Health +25 HP.');
+        } else {
+          AppAudio.playRejectSound();
+          addLog('Not enough gold to upgrade HP.');
+        }
+      }
+
+      function navigateTo(screenId) {
+        AppAudio.initContext();
+        const screens = document.querySelectorAll('.screen');
+        const navButtons = document.querySelectorAll('.nav-btn');
+
+        screens.forEach(screen => screen.classList.toggle('active', screen.id === screenId));
+        navButtons.forEach(btn => {
+          const onclickAttr = btn.getAttribute('onclick');
+          if (onclickAttr) btn.classList.toggle('active', onclickAttr.includes(screenId));
+        });
+
+        state.activeScreen = screenId;
+        addLog(`Switched view to ${screenId}`);
+
+        if (screenId === '3d-screen') {
+          if (!is3DInitialized) {
+            init3DWorld();
+            is3DInitialized = true;
+          } else {
+            onWindowResize();
+          }
+        } else if (screenId === 'inventory-screen') {
+          renderInventory();
+        }
+      }
+
+      function renderMetrics() {
+        const gridContainer = document.getElementById('metrics-grid');
+        if (!gridContainer) return;
+
+        gridContainer.innerHTML = state.metrics.map(metric => `
+          <div class="card">
+            <h3>${metric.label}</h3>
+            <div class="metric-value">${metric.value}</div>
+          </div>
+        `).join('');
+      }
+
+      function renderLogs() {
+        const logList = document.getElementById('activity-log-list');
+        if (!logList) return;
+
+        logList.innerHTML = state.logs.slice(0, 5).map(log => `
+          <li>${log}</li>
+        `).join('');
+      }
+
+      function renderInventory() {
+        const invGrid = document.getElementById('inventory-grid');
+        if (!invGrid) return;
+
+        let slotsHtml = '';
+        for (let i = 0; i < state.maxSlots; i++) {
+          const item = state.inventory[i];
+          if (item) {
+            slotsHtml += `
+              <div class="inventory-slot filled" onclick="AppEngine.useInventoryItem(${i})">
+                <span class="slot-count">x${item.count}</span>
+                <div class="slot-icon">${item.icon}</div>
+                <div class="slot-name">${item.name}</div>
+              </div>
+            `;
+          } else {
+            slotsHtml += `
+              <div class="inventory-slot">
+                <div class="slot-name" style="color: var(--text-muted);">Empty</div>
+              </div>
+            `;
+          }
+        }
+        invGrid.innerHTML = slotsHtml;
+      }
+
+      function triggerAction(actionType) {
+        if (actionType === 'quick-add') {
+          const currentGold = state.metrics.find(m => m.id === 'm1').value;
+          updateMetric('m1', currentGold + 100);
+          AppAudio.playCoinSound();
+          addLog('Added +100 Gold to Inventory.');
+        } else if (actionType === 'spawn-enemy') {
+          if (is3DInitialized && scene) {
+            spawnEnemyDrone(Math.random() * 20 - 10, Math.random() * 20 - 10);
+            addLog('Spawned new Enemy Drone into Arena.');
+          } else {
+            addLog('Open 3D Arena first to spawn enemies.');
+          }
+        } else if (actionType === 'spawn-boss') {
+          if (is3DInitialized && scene) {
+            spawnBoss();
+          } else {
+            addLog('Open 3D Arena first to spawn Boss.');
+          }
+        }
+      }
+
+      // 3D WORLD SYSTEM
+      function init3DWorld() {
+        const container = document.getElementById('3d-screen');
+        const canvas = document.getElementById('webgl-canvas');
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0f19);
+        scene.fog = new THREE.FogExp2(0x0b0f19, 0.02);
+
+        camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 7, 14);
+
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+        dirLight.position.set(20, 40, 20);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        const pointLight = new THREE.PointLight(0xf59e0b, 1.5, 15);
+        pointLight.position.set(0, 3, -8);
+        scene.add(pointLight);
+
+        const grid = new THREE.GridHelper(80, 80, 0x38bdf8, 0x161e2e);
+        scene.add(grid);
+
+        const floorGeo = new THREE.PlaneGeometry(80, 80);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x0e1422, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        createBuilding(-14, 0, -12, 8, 7, 8, 0x161e2e);
+        createBuilding(14, 0, -12, 8, 7, 8, 0x161e2e);
+
+        const npcGeo = new THREE.CylinderGeometry(0.6, 0.6, 2, 16);
+        const npcMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2 });
+        npcMesh = new THREE.Mesh(npcGeo, npcMat);
+        npcMesh.position.set(0, 1, -8);
+        npcMesh.castShadow = true;
+        scene.add(npcMesh);
+
+        const playerGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.8, 16);
+        const playerMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+        playerMesh = new THREE.Mesh(playerGeo, playerMat);
+        playerMesh.position.set(0, 0.9, 0);
+        playerMesh.castShadow = true;
+        scene.add(playerMesh);
+
+        const arcGeo = new THREE.RingGeometry(0.8, 2.6, 16, 1, 0, Math.PI);
+        const arcMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+        attackArcMesh = new THREE.Mesh(arcGeo, arcMat);
+        attackArcMesh.rotation.x = -Math.PI / 2;
+        attackArcMesh.position.set(0, 0.5, 0);
+        scene.add(attackArcMesh);
+
+        const shockGeo = new THREE.RingGeometry(0.5, 6.0, 32);
+        const shockMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+        shockwaveMesh = new THREE.Mesh(shockGeo, shockMat);
+        shockwaveMesh.rotation.x = -Math.PI / 2;
+        shockwaveMesh.position.set(0, 0.2, 0);
+        scene.add(shockwaveMesh);
+
+        spawnPickup(-5, 0.8, -4, 0xf59e0b, 'Gold Coin', '🪙', 'gold', 0, 100);
+        spawnPickup(5, 0.8, -4, 0xef4444, 'Health Elixir', '🧪', 'consumable', 35, 0);
+
+        spawnEnemyDrone(-7, -6);
+        spawnEnemyDrone(7, -5);
+
+        window.addEventListener('keydown', (e) => {
+          const key = e.key.toLowerCase();
+          keys[key] = true;
+
+          if (key === 'e' && nearNPC) openShop();
+          if (key === 'f') playerAttack();
+          if (key === 'r') playerShockwave();
+        });
+
+        window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+        canvas.addEventListener('click', () => playerAttack());
+        window.addEventListener('resize', onWindowResize);
+
+        animate3D();
+        addLog('3D Combat Arena Loaded.');
+      }
+
+      function spawnPickup(x, y, z, color, name, icon, type, heal, value) {
+        const geo = new THREE.OctahedronGeometry(0.4);
+        const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.1, metalness: 0.8 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        mesh.castShadow = true;
+        scene.add(mesh);
+
+        pickupItems.push({ mesh, name, icon, type, heal, value, active: true });
+      }
+
+      function spawnEnemyDrone(x, z) {
+        const group = new THREE.Group();
+
+        const bodyGeo = new THREE.IcosahedronGeometry(0.7, 0);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
+        const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+        bodyMesh.castShadow = true;
+        group.add(bodyMesh);
+
+        const eyeGeo = new THREE.SphereGeometry(0.25);
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
+        eyeMesh.position.set(0, 0, 0.5);
+        group.add(eyeMesh);
+
+        group.position.set(x, 1, z);
+        scene.add(group);
+
+        enemies.push({
+          group,
+          hp: 50,
+          maxHp: 50,
+          active: true,
+          speed: 0.045
+        });
+      }
+
+      function spawnBoss() {
+        if (boss && boss.active) return;
+
+        const group = new THREE.Group();
+
+        const bodyGeo = new THREE.BoxGeometry(2.5, 3.5, 2.5);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.2 });
+        const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+        bodyMesh.castShadow = true;
+        group.add(bodyMesh);
+
+        const eyeGeo = new THREE.BoxGeometry(1.5, 0.4, 0.4);
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
+        eyeMesh.position.set(0, 1, 1.3);
+        group.add(eyeMesh);
+
+        group.position.set(0, 1.75, -18);
+        scene.add(group);
+
+        boss = {
+          group,
+          hp: 300,
+          maxHp: 300,
+          active: true,
+          speed: 0.035
+        };
+
+        document.getElementById('boss-hud').style.display = 'block';
+        updateBossHud();
+        addLog('WARNING: Boss Encounter Started!');
+      }
+
+      function updateBossHud() {
+        if (!boss) return;
+        const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
+        document.getElementById('boss-hp-fill').style.width = pct + '%';
+      }
+
+      function createBuilding(x, y, z, w, h, d, color) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mat = new THREE.MeshStandardMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, h / 2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+
+      function createImpactParticles(position, colorHex) {
+        for (let i = 0; i < 8; i++) {
+          const geo = new THREE.SphereGeometry(0.12);
+          const mat = new THREE.MeshBasicMaterial({ color: colorHex });
+          const p = new THREE.Mesh(geo, mat);
+          p.position.copy(position);
+
+          const vel = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.3,
+            Math.random() * 0.3,
+            (Math.random() - 0.5) * 0.3
+          );
+
+          scene.add(p);
+          particles.push({ mesh: p, vel, life: 1.0 });
+        }
+      }
+
+      function playerAttack() {
+        if (state.activeScreen !== '3d-screen' || !playerMesh) return;
+
+        AppAudio.playAttackSound();
+
+        attackArcMesh.position.set(playerMesh.position.x, 0.5, playerMesh.position.z);
+        attackArcMesh.material.opacity = 0.8;
+
+        setTimeout(() => {
+          if (attackArcMesh) attackArcMesh.material.opacity = 0;
+        }, 150);
+
+        enemies.forEach(enemy => {
+          if (enemy.active) {
+            const dist = playerMesh.position.distanceTo(enemy.group.position);
+            if (dist < 3.2) {
+              const dmg = 25;
+              enemy.hp -= dmg;
+              registerHitCombo();
+              showDamageText(dmg, enemy.group.position);
+              AppAudio.playHitSound();
+              createImpactParticles(enemy.group.position, 0xef4444);
+
+              const dir = new THREE.Vector3().subVectors(enemy.group.position, playerMesh.position).normalize();
+              enemy.group.position.add(dir.multiplyScalar(0.8));
+
+              if (enemy.hp <= 0) {
+                enemy.active = false;
+                scene.remove(enemy.group);
+
+                const kills = state.metrics.find(m => m.id === 'm3').value + 1;
+                updateMetric('m3', kills);
+
+                const currentGold = state.metrics.find(m => m.id === 'm1').value;
+                updateMetric('m1', currentGold + 50);
+
+                addXp(35);
+                spawnPickup(enemy.group.position.x, 0.8, enemy.group.position.z, 0xef4444, 'Health Elixir', '🧪', 'consumable', 35, 0);
+                addLog('Defeated Enemy Drone! +50 Gold, +35 XP.');
+              }
+            }
+          }
+        });
+
+        if (boss && boss.active) {
+          const distBoss = playerMesh.position.distanceTo(boss.group.position);
+          if (distBoss < 4.5) {
+            const dmg = 30;
+            boss.hp -= dmg;
+            registerHitCombo();
+            showDamageText(dmg, boss.group.position);
+            AppAudio.playHitSound();
+            createImpactParticles(boss.group.position, 0xa855f7);
+            updateBossHud();
+
+            if (boss.hp <= 0) {
+              boss.active = false;
+              scene.remove(boss.group);
+              document.getElementById('boss-hud').style.display = 'none';
+
+              const currentGold = state.metrics.find(m => m.id === 'm1').value;
+              updateMetric('m1', currentGold + 500);
+
+              addXp(100);
+              addLog('VICTORY! Cyber Dreadnought Defeated! +500 Gold rewarded!');
+            }
+          }
+        }
+      }
+
+      function playerShockwave() {
+        if (!state.hasShockwaveSkill || state.activeScreen !== '3d-screen') return;
+
+        AppAudio.playShockwaveSound();
+
+        shockwaveMesh.position.set(playerMesh.position.x, 0.2, playerMesh.position.z);
+        shockwaveMesh.material.opacity = 0.9;
+
+        setTimeout(() => {
+          if (shockwaveMesh) shockwaveMesh.material.opacity = 0;
+        }, 250);
+
+        enemies.forEach(enemy => {
+          if (enemy.active) {
+            const dist = playerMesh.position.distanceTo(enemy.group.position);
+            if (dist < 6.5) {
+              const dmg = 40;
+              enemy.hp -= dmg;
+              registerHitCombo();
+              showDamageText(dmg, enemy.group.position);
+              createImpactParticles(enemy.group.position, 0xf59e0b);
+            }
+          }
+        });
+
+        if (boss && boss.active) {
+          const distBoss = playerMesh.position.distanceTo(boss.group.position);
+          if (distBoss < 7.0) {
+            const dmg = 50;
+            boss.hp -= dmg;
+            registerHitCombo();
+            showDamageText(dmg, boss.group.position);
+            createImpactParticles(boss.group.position, 0xf59e0b);
+            updateBossHud();
+          }
+        }
+      }
+
+      function onWindowResize() {
+        const container = document.getElementById('3d-screen');
+        if (!camera || !renderer || !container) return;
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+
+      function animate3D() {
+        requestAnimationFrame(animate3D);
+
+        if (state.activeScreen === '3d-screen' && playerMesh) {
+          const speed = 0.12;
+          let isMoving = false;
+
+          if (keys['w'] || keys['arrowup']) { playerMesh.position.z -= speed; isMoving = true; }
+          if (keys['s'] || keys['arrowdown']) { playerMesh.position.z += speed; isMoving = true; }
+          if (keys['a'] || keys['arrowleft']) { playerMesh.position.x -= speed; isMoving = true; }
+          if (keys['d'] || keys['arrowright']) { playerMesh.position.x += speed; isMoving = true; }
+
+          if (isMoving && playerMesh.position.y <= 0.91) AppAudio.playFootstep();
+
+          if (keys[' '] && playerMesh.position.y <= 0.91) {
+            playerMesh.position.y = 2.2;
+            AppAudio.playJumpSound();
+          }
+          if (playerMesh.position.y > 0.9) playerMesh.position.y -= 0.07;
+
+          camera.position.x = playerMesh.position.x;
+          camera.position.z = playerMesh.position.z + 10;
+          camera.position.y = playerMesh.position.y + 5;
+          camera.lookAt(playerMesh.position);
+
+          const time = Date.now() * 0.003;
+          pickupItems.forEach(item => {
+            if (item.active) {
+              item.mesh.rotation.y += 0.03;
+              item.mesh.position.y = 0.8 + Math.sin(time + item.mesh.position.x) * 0.15;
+
+              if (playerMesh.position.distanceTo(item.mesh.position) < 1.2) {
+                item.active = false;
+                scene.remove(item.mesh);
+                addItemToInventory(item.name, item.icon, item.type, item.heal, item.value);
+                AppAudio.playPickupSound();
+                addLog(`Picked up: ${item.name}!`);
+              }
+            }
+          });
+
+          enemies.forEach(enemy => {
+            if (enemy.active) {
+              const dist = playerMesh.position.distanceTo(enemy.group.position);
+
+              if (dist < 12 && dist > 1.2) {
+                const dir = new THREE.Vector3().subVectors(playerMesh.position, enemy.group.position).normalize();
+                enemy.group.position.x += dir.x * enemy.speed;
+                enemy.group.position.z += dir.z * enemy.speed;
+                enemy.group.lookAt(playerMesh.position);
+              }
+
+              enemy.group.position.y = 1 + Math.sin(time * 2 + enemy.group.position.x) * 0.2;
+
+              if (dist <= 1.3 && Date.now() - lastEnemyAttackTime > 1000) {
+                const currentHp = state.metrics.find(m => m.id === 'm2').value;
+                const newHp = Math.max(0, currentHp - 10);
+                updateMetric('m2', newHp);
+                AppAudio.playHitSound();
+                lastEnemyAttackTime = Date.now();
+                addLog('Attacked by Enemy Drone! -10 HP');
+              }
+            }
+          });
+
+          if (boss && boss.active) {
+            const distBoss = playerMesh.position.distanceTo(boss.group.position);
+            if (distBoss > 2.0) {
+              const dir = new THREE.Vector3().subVectors(playerMesh.position, boss.group.position).normalize();
+              boss.group.position.x += dir.x * boss.speed;
+              boss.group.position.z += dir.z * boss.speed;
+              boss.group.lookAt(playerMesh.position);
+            }
+
+            if (distBoss <= 2.2 && Date.now() - lastEnemyAttackTime > 1200) {
+              const currentHp = state.metrics.find(m => m.id === 'm2').value;
+              const newHp = Math.max(0, currentHp - 20);
+              updateMetric('m2', newHp);
+              AppAudio.playHitSound();
+              lastEnemyAttackTime = Date.now();
+              addLog('Hit by Cyber Dreadnought! -20 HP');
+            }
+          }
+
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.mesh.position.add(p.vel);
+            p.life -= 0.05;
+            p.mesh.scale.multiplyScalar(0.92);
+
+            if (p.life <= 0) {
+              scene.remove(p.mesh);
+              particles.splice(i, 1);
+            }
+          }
+
+          const distNPC = playerMesh.position.distanceTo(npcMesh.position);
+          const promptElem = document.getElementById('interact-prompt');
+
+          if (distNPC < 3.5) {
+            nearNPC = true;
+            if (promptElem) promptElem.style.display = 'block';
+          } else {
+            nearNPC = false;
+            if (promptElem) promptElem.style.display = 'none';
+          }
+
+          renderer.render(scene, camera);
+        }
+      }
+
+      function openShop() {
+        AppAudio.initContext();
+        document.getElementById('shop-modal').style.display = 'block';
+        addLog('Opened shop with Goran.');
+      }
+
+      function closeShop() {
+        document.getElementById('shop-modal').style.display = 'none';
+      }
+
+      function buyItem(itemName, price, icon = '📦', type = 'misc', heal = 0, value = 0) {
+        const currentGold = state.metrics.find(m => m.id === 'm1').value;
+        if (currentGold >= price) {
+          const success = addItemToInventory(itemName, icon, type, heal, value);
+          if (success) {
+            updateMetric('m1', currentGold - price);
+            AppAudio.playSuccessSound();
+            document.getElementById('npc-dialogue').innerText = `"Pleasure doing business! ${itemName} is in your bag!"`;
+            addLog(`Purchased ${itemName} for ${price} Gold.`);
+          }
+        } else {
+          AppAudio.playRejectSound();
+          document.getElementById('npc-dialogue').innerText = `"You don't have enough gold for that!"`;
+        }
+      }
+
+      function makeOffer() {
+        const offerInput = document.getElementById('offer-input');
+        const offer = parseInt(offerInput.value);
+        const dialogue = document.getElementById('npc-dialogue');
+
+        if (!offer || offer <= 0) {
+          AppAudio.playRejectSound();
+          dialogue.innerText = `"Give me a valid offer!"`;
+          return;
+        }
+
+        if (offer >= 420) {
+          AppAudio.playSuccessSound();
+          dialogue.innerText = `"Deal! ${offer} Gold works. Take the sword!"`;
+          buyItem('Crystal Greatsword', offer, '⚔️', 'weapon', 0, 40);
+        } else {
+          AppAudio.playRejectSound();
+          dialogue.innerText = `"${offer} Gold is too low! I cannot sell for under 420 Gold."`;
+        }
+      }
+
+      function init() {
+        loadProgress();
+        renderMetrics();
+        renderLogs();
+        renderInventory();
+      }
+
+      return {
+        init,
+        navigateTo,
+        triggerAction,
+        getState,
+        addLog,
+        openShop,
+        closeShop,
+        buyItem,
+        makeOffer,
+        useInventoryItem,
+        unlockSkill,
+        upgradeHp,
+        downloadSourceCode,
+        saveProgress,
+        resetProgress
+      };
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      AppEngine.init();
+    });
+  </script>
+</body>
+</html>
